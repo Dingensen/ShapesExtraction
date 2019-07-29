@@ -9,6 +9,8 @@ import cv2
 import numpy as np
 import os
 import Bird_Angle_calculator as computeAngles
+import imutils #not standard in anaconda 2.7, install manually "conda install -c pjamesjoyce imutils"
+import simplification #not standard, install manually "pip install simplification"
 #import csv
 
 birdData = 'BirdSilhouettes'
@@ -21,30 +23,37 @@ def toTuple(a):
     except TypeError:
         return a
 
+#perhaps use Houghlines (https://docs.opencv.org/2.4/modules/imgproc/doc/feature_detection.html?highlight=cornerharris#canny86)
+#or cv2.findcontours
 def getTheCoordinateArray(file):
     img = cv2.imread(os.path.join(os.getcwd(),birdData,file))
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     
     gray = np.float32(gray)
-    dst = cv2.cornerHarris(gray,2,1,0.04) ## ksize – Aperture parameter for the Sobel() operator had to be set to '1' (that is, no Gaussian smoothing is done while calculating the local maximums (so the derivatives of th 1 or 2 order) )
     
-    #result is dilated for marking the corners, not important
-    dst = cv2.dilate(dst,None)
+    #create shape-mask from the image
+    lower = np.array([0, 0, 0])
+    upper = np.array([128, 128, 128])
+    shapeMask = cv2.inRange(img, lower, upper)
+
+    '''
+    #shows the shape mask for each shape
+    cv2.imshow("shapeMask", shapeMask)
+    cv2.waitKey(0)
+    '''
     
-    # Threshold for an optimal value, it may vary depending on the image.
-    img[dst>0.01*dst.max()]=[0,0,255]
+    #look for contours in the mask
+    contours = cv2.findContours(shapeMask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    contours = imutils.grab_contours(contours)
     
-    #cv2.imshow('dst',img)
+    #format the list accordingly
+    contours = contours[0]
+    corners = []
+    for vertex in contours:
+        corners.append(vertex[0].tolist())
     
-    ret, dst = cv2.threshold(dst,0.01*dst.max(),255,0)
-    dst = np.uint8(dst)
-    
-    # find centroids
-    ret, labels, stats, centroids = cv2.connectedComponentsWithStats(dst)
-    
-    # define the criteria to stop and refine the corners
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
-    corners = cv2.cornerSubPix(gray,np.float32(centroids),(5,5),(-1,-1),criteria)
+    #simpliufy the shape
+    corners = simplify_coords(corners, 1.0)
     
     #NOTE: Felix here, removed following lines as they were causing my system to freeze up. seems to work without. I am not entirely sure what they do.
     #if cv2.waitKey(0) & 0xff == 27:
@@ -53,7 +62,9 @@ def getTheCoordinateArray(file):
     cv2.destroyAllWindows()
     
     #Felix: changed this up so the coordinates get returned as a tuple (x,y) instead of a list [x,y] so it can work with the angle-calculation-script
-    theCoordinates = toTuple(corners.tolist())
+    theCoordinates = []
+    for vertex in corners:
+        theCoordinates.append(toTuple(vertex))
     
     return theCoordinates
 
@@ -76,7 +87,9 @@ for file in files:
     birdShapeOutput.write(lines)
     birdShapeOutput.write("]\n")
     
-
+birdShapeOutput.close()
+    
+#run the other script that calculates the angles
 computeAngles.processBirdFile(birdShapeOutputFile)
 
 """

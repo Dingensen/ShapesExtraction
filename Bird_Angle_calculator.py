@@ -20,6 +20,22 @@ import numpy as np
 def processBirdFile(argument):
     print(readFile(argument)) #call readFile-function with the filePath data
 
+#function that takes an array of angles (from 0 to 180) and only keeps the 12 "sharpest" angles
+def forceTwelveAngles(inputArray):
+    twelveVertexArray = []
+    if len(inputArray)==12:
+        twelveVertexArray = inputArray #it does nothing, but it's symbolic
+    elif len(inputArray)>12: #keep only the twelve sharpest angles
+        while len(inputArray)>12:
+            comparatorArray = list(inputArray) #copy the list properly
+            comparatorArray.sort()
+            inputArray.remove(comparatorArray.pop())
+        twelveVertexArray = inputArray
+    else: #for less than 12, make an empty array
+        for x in range(12):
+            twelveVertexArray.append(None)
+    return twelveVertexArray
+
 def readFile(path):  
     file = open(path, "rt")
     fileData = file.read()
@@ -37,6 +53,10 @@ def readFile(path):
         coords = np.array(eval(coords))
         bird = create_angleArray(coords)
         angles.append(bird)
+        
+    #limit the amount of angles on each bird to 12
+    for bird in angles:
+        bird = forceTwelveAngles(bird)
 
     #now we create the new file
     newFile = open("birdAngles.txt", "w+")
@@ -66,12 +86,18 @@ def calc_angle (vertex1, vertex2, vertex3):
 
 def create_angleArray(verticeArray):
     """Creates an array of angles form an array of vertices."""
+          
     array2 = verticeArray[0]
     angleArray = []
-    i = len(array2)
-    for j in range(i):
-        angle = calc_angle(array2[j-3], array2[j-2], array2[j-1])
-        angleArray.append(angle) 
+    
+    #Felix-edit: method that takes care of arrays with length < 3
+    if len(array2)<3:
+        angleArray.append(0)
+    else:
+        i = len(array2)
+        for j in range(i):
+            angle = calc_angle(array2[j-3], array2[j-2], array2[j-1])
+            angleArray.append(angle) 
  
     return angleArray
 
