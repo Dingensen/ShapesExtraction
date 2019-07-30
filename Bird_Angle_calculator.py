@@ -23,17 +23,17 @@ def processBirdFile(argument):
 #function that takes an array of angles (from 0 to 180) and only keeps the 12 "sharpest" angles
 def forceTwelveAngles(inputArray):
     twelveVertexArray = []
-    if len(inputArray)==12:
-        twelveVertexArray = inputArray #it does nothing, but it's symbolic
+    if len(inputArray)<12: #for less than 12, make an empty array
+        inputArray = [None]
+        twelveVertexArray = list(inputArray)
+    elif len(inputArray)==12:
+        twelveVertexArray = list(inputArray) #it does nothing, but it's symbolic
     elif len(inputArray)>12: #keep only the twelve sharpest angles
         while len(inputArray)>12:
             comparatorArray = list(inputArray) #copy the list properly
             comparatorArray.sort()
             inputArray.remove(comparatorArray.pop())
-        twelveVertexArray = inputArray
-    else: #for less than 12, make an empty array
-        for x in range(12):
-            twelveVertexArray.append(None)
+        twelveVertexArray = list(inputArray)
     return twelveVertexArray
 
 def readFile(path):  
@@ -52,17 +52,15 @@ def readFile(path):
     for coords in coordArrays2:
         coords = np.array(eval(coords))
         bird = create_angleArray(coords)
+        bird = forceTwelveAngles(bird)
         angles.append(bird)
         
-    #limit the amount of angles on each bird to 12
-    for bird in angles:
-        bird = forceTwelveAngles(bird)
-
     #now we create the new file
     newFile = open("birdAngles.txt", "w+")
 
     #replace the angles with the new coordinates...
     for bird in angles:
+        #print len(bird)
         fileData = re.sub("\[\((.*?)\]", str(bird), fileData, 1)
     
     #write the new coordinates into the new file

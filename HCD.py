@@ -10,7 +10,7 @@ import numpy as np
 import os
 import Bird_Angle_calculator as computeAngles
 import imutils #not standard in anaconda 2.7, install manually "conda install -c pjamesjoyce imutils"
-import simplification #not standard, install manually "pip install simplification"
+from simplification.cutil import simplify_coords #not standard, install manually "pip install simplification"
 #import csv
 
 birdData = 'BirdSilhouettes'
@@ -76,7 +76,6 @@ files = os.listdir(os.path.join(wd,birdData))
 #Felix: created own file-writing procedure to make the file easier readable to the angle-calculator
 birdShapeOutput = open(birdShapeOutputFile, "w+")
 for file in files:
-    
     #thrown-together code to make the output strings readable for the angle-calculator
     lines = getTheCoordinateArray(file)
     lines = str(lines)
