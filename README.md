@@ -6,7 +6,12 @@ For Machine Learning - Shape Segmentation
 Compatible with Anaconda 2.7, requires additional libraries:
 [simplification](https://github.com/urschrei/simplification) and [imutils](https://github.com/jrosebr1/imutils)
 
-Running HCD.py will open all the images in the Folder "BirdSilhouettes" and create two Text files "birdShapes.txt" and "birdAngles.txt"
+"BirdSilhouettes" is to contain an amount of image files, each displaying a polygon of 12 vertices (see example images).
+HCD.py will look through all the images in the Folder "BirdSilhouettes" and create two Text files "birdShapes.txt" and "birdAngles.txt".
+
+HCD.py makes use of the libaries [simplification](https://github.com/urschrei/simplification) and [imutils](https://github.com/jrosebr1/imutils), as well as [opencv](https://github.com/opencv/opencv) in order to extract an array of pixel coordinates that represent the original polygon within a margin of error. It does so by first creating a shape-mask of the polygon from which the contours of the polygon are then extracted using [cv2.findcontours()](https://docs.opencv.org/3.1.0/d3/dc0/group__imgproc__shape.html#ga17ed9f5d79ae97bd4c7cf18403e1689a) and [imutils.grab_contours()](https://github.com/jrosebr1/imutils/blob/master/imutils/convenience.py).
+Since the resulting shape woul contain too many vertices (about one for each border-pixel of the contour), a simplification-function simplify_coords(), using the [Ramer-Douglas-Peucker algorithm](https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm), is run over the vertices in order to remove uneeded vertices.
+The resulting coordinate Arrays are then saved to "birdShapes.txt" and Bird_Angle_Calculator is being used next in order to create an Array of the 12 most prominent Angles in each polygon.
 
 example images:
 
